@@ -7,7 +7,7 @@ from copy import deepcopy
 
 ##configuration parameters
 router_queue_size = 0 #0 means unlimited
-simulation_time = 15 #give the network sufficient time to execute transfers
+simulation_time = 10 #give the network sufficient time to execute transfers
 
 if __name__ == '__main__':
     object_L = [] #keeps track of objects, so we can kill their threads at the end
@@ -18,7 +18,7 @@ if __name__ == '__main__':
     host_2 = Host('H2')
     object_L.append(host_2)
     host_3 = Host('H3')
-    object_L.append(host_2)
+    object_L.append(host_3)
     
     # tables for router a 
     encap_tbl_D = {0: ('11', 3), 1: ('12', 2)}    # table used to encapsulate network packets into MPLS frames {(in interface: (out label, out interface)}
@@ -93,12 +93,18 @@ if __name__ == '__main__':
         t.start()
     
     #create some send events    
-    host_1.udt_send('H3', 'MESSAGE_1_FROM_H1')
-    host_2.udt_send('H3', 'MESSAGE_2_FROM_H2')
-    host_3.udt_send('H1', 'MESSAGE_3_FROM_H3')
+    print('\nSending first message from H1. Path should be:\n\n    H1-RA-RC-RD-H3\n')
+    host_1.udt_send('h3', 'MESSAGE_1_FROM_H1')
+    # give time for message to be received 
+    sleep(3)
+    print('\nSending second message from H2. Path should be:\n\n    H2-RA-RB-RD-H3\n')
+    host_2.udt_send('h3', 'message_2_from_h2')
+    sleep(3)
+    print('\nSending third message from H3. Path should be:\n\n    H3-RD-RC-RA-H2\n')
+    host_3.udt_send('h2', 'message_3_from_h3')
 #    for i in range(5):
 #        priority = i%2
-#        host_1.udt_send('H2', 'MESSAGE_%d_FROM_H1' % i, priority)
+#        host_1.udt_send('h2', 'message_%d_from_h1' % i, priority)
         
     #give the network sufficient time to transfer all packets before quitting
     sleep(simulation_time)

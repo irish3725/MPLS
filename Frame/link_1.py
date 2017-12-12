@@ -84,10 +84,10 @@ class Link:
                     #update the next free time of the interface according to serialization delay
                     pkt_size = len(pkt_S)*8 #assuming each character is 8 bits
                     intf_a.next_avail_time = time.time() + pkt_size/intf_a.capacity                
-                    print('%s: transmitting frame "%s" on %s %s -> %s %s \n' \
-                          ' - seconds until the next available time %f\n' \
-                          ' - queue size %d' \
-                          % (self, pkt_S, node_a, node_a_intf, node_b, node_b_intf, intf_a.next_avail_time - time.time(), intf_a.out_queue.qsize()))
+#                    print('%s: transmitting frame "%s" on %s %s -> %s %s \n' \
+#                          ' - seconds until the next available time %f\n' \
+#                          ' - queue size %d' \
+#                          % (self, pkt_S, node_a, node_a_intf, node_b, node_b_intf, intf_a.next_avail_time - time.time(), intf_a.out_queue.qsize()))
                 # uncomment the lines below to see waiting time until next transmission
 #                 else:
 #                     print('%s: waiting to transmit packet on %s %s -> %s, %s for another %f milliseconds' % (self, node_a, node_a_intf, node_b, node_b_intf, intf_a.next_avail_time - time.time()))    

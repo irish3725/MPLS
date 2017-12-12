@@ -243,20 +243,22 @@ class Router:
 
         print('%s: processing MPLS frame "%s"' % (self, m_fr))
 
+        # get the key that we will be looking for in frwd_tbl_D and deap_tbl_D
+        tbl_key = (in_label_S, i)
         # check to see if there is a rule for forwarding this packet
-        if in_label_S in self.frwd_tbl_D.keys():
+        if tbl_key in self.frwd_tbl_D.keys():
             # get new MPLS label 
-            out_label_S = self.frwd_tbl_D[in_label_S][0]
+            out_label_S = self.frwd_tbl_D[tbl_key][0]
             # get new interface to forward packet 
-            out_intf_I = self.frwd_tbl_D[in_label_S][1]
+            out_intf_I = self.frwd_tbl_D[tbl_key][1]
             # set link label as 'MPLS'
             out_link_label_S = 'MPLS'
             # create string payload for link layer to forward
             out_pkt_S = MPLSFrame(out_label_S, in_payload_S).to_byte_S()
         # else, check to see if there is a rule for decapsulation 
-        elif in_label_S in self.decap_tbl_D.keys():
+        elif tbl_key in self.decap_tbl_D.keys():
             # get new interface to forward packet 
-            out_intf_I = self.decap_tbl_D[in_label_S]
+            out_intf_I = self.decap_tbl_D[tbl_key]
             # set link labe as 'Network'
             out_link_label_S = 'Network'
             # create string payload for link layer to forward

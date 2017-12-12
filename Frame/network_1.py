@@ -1,6 +1,6 @@
 import queue
 import threading
-from link import LinkFrame
+from link_1 import LinkFrame
 
 
 ## wrapper class for a queue of packets
@@ -41,14 +41,42 @@ class Interface:
         else:
             # print('putting packet in the IN queue')
             self.in_queue.put(pkt, block)
-            
-        
+         
+## Implements a MPLS frame to encapsulate IP packets
+class MPLSFrame:
+    ## length of label of MPLS frame 
+    label_S_length = 2 
+    
+    ## @param label: label for forwarding
+    #  @param data_S: data contained by MPLS frame 
+    def __init__(self, label_S, data_S):
+        self.label_S = label_S
+        self.data_S = data_S    
+
+    ## called when printing the object
+    def __str__(self):
+        return self.to_byte_S()
+
+    ## convert packet to a byte string for transmission over links
+    def to_byte_S(self):
+        byte_S = str(self.label_S).zfill(self.label_S_length)
+        byte_S += self.data_S
+        return byte_S
+    
+    ## extract a packet object from a byte string
+    # @param byte_S: byte string representation of the packet
+    @classmethod
+    def from_byte_S(self, byte_S):
+        label = byte_S[0 : NetworkPacket.label_S_length].strip('0')
+        data_S = byte_S[NetworkPacket.dst_S_length : ]        
+        return self(dst, data_S)
+       
 ## Implements a network layer packet
 # NOTE: You will need to extend this class for the packet to include
 # the fields necessary for the completion of this assignment.
 class NetworkPacket:
     ## packet encoding lengths 
-    dst_S_length = 5
+    dst_S_length = 5 
     
     ##@param dst: address of the destination host
     # @param data_S: packet payload
@@ -123,36 +151,6 @@ class Host:
             if(self.stop):
                 print (threading.currentThread().getName() + ': Ending')
                 return
-        
-## Implements a MPLS frame to encapsulate IP packets
-class MPLSFrame:
-    
-    ## @param label: label for forwarding
-    #  @param data_S: data contained by MPLS frame 
-    def __init__(self, label, data_S):
-        self.label = label_S
-        self.label_S_length = 5
-    
-    ## called when printing the object
-    def __str__(self):
-        return self.to_string
-
-    ## convert packet to a byte string for transmission over links
-    def to_byte_S(self):
-        byte_S = str(self.label).zfill(self.label_S_length)
-        byte_S += self.data_S
-        return byte_S
-    
-    ## extract a packet object from a byte string
-    # @param byte_S: byte string representation of the packet
-    @classmethod
-    def from_byte_S(self, byte_S):
-        label = byte_S[0 : NetworkPacket.label_S_length].strip('0')
-        data_S = byte_S[NetworkPacket.dst_S_length : ]        
-        return self(dst, data_S)
-    
-
-
 ## Implements a multi-interface router
 class Router:
     
@@ -194,10 +192,8 @@ class Router:
                 p = NetworkPacket.from_byte_S(pkt_S) #parse a packet out
                 self.process_network_packet(p, i)
             elif fr.type_S == "MPLS":
-                # TODO: handle MPLS frames
-                # m_fr = MPLSFrame.from_byte_S(pkt_S) #parse a frame out
-                #for now, we just relabel the packet as an MPLS frame without encapsulation
-                m_fr = p
+                m_fr = MPLSFrame.from_byte_S(pkt_S) #parse a frame out
+                
                 #send the MPLS frame for processing
                 self.process_MPLS_frame(m_fr, i)
             else:
@@ -209,7 +205,7 @@ class Router:
     def process_network_packet(self, pkt, i):
         #TODO: encapsulate the packet in an MPLS frame based on self.encap_tbl_D
         #for now, we just relabel the packet as an MPLS frame without encapsulation
-        m_fr = pkt
+        m_fr = MPLSFrame('MP', pkt.to_byte_S())
         print('%s: encapsulated packet "%s" as MPLS frame "%s"' % (self, pkt, m_fr))
         #send the encapsulated packet for processing as MPLS frame
         self.process_MPLS_frame(m_fr, i)

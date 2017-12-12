@@ -124,6 +124,33 @@ class Host:
                 print (threading.currentThread().getName() + ': Ending')
                 return
         
+## Implements a MPLS frame to encapsulate IP packets
+class MPLSFrame:
+    
+    ## @param label: label for forwarding
+    #  @param data_S: data contained by MPLS frame 
+    def __init__(self, label, data_S):
+        self.label = label_S
+        self.label_S_length = 5
+    
+    ## called when printing the object
+    def __str__(self):
+        return self.to_string
+
+    ## convert packet to a byte string for transmission over links
+    def to_byte_S(self):
+        byte_S = str(self.label).zfill(self.label_S_length)
+        byte_S += self.data_S
+        return byte_S
+    
+    ## extract a packet object from a byte string
+    # @param byte_S: byte string representation of the packet
+    @classmethod
+    def from_byte_S(self, byte_S):
+        label = byte_S[0 : NetworkPacket.label_S_length].strip('0')
+        data_S = byte_S[NetworkPacket.dst_S_length : ]        
+        return self(dst, data_S)
+    
 
 
 ## Implements a multi-interface router

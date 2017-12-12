@@ -93,14 +93,8 @@ if __name__ == '__main__':
         t.start()
     
     #create some send events    
-    print('\nSending first message from H1. Path should be:\n\n    H1-RA-RC-RD-H3\n')
     host_1.udt_send('h3', 'MESSAGE_1_FROM_H1')
-    # give time for message to be received 
-    sleep(3)
-    print('\nSending second message from H2. Path should be:\n\n    H2-RA-RB-RD-H3\n')
     host_2.udt_send('h3', 'message_2_from_h2', 1)
-    sleep(3)
-    print('\nSending third message from H3. Path should be:\n\n    H3-RD-RC-RA-H2\n')
     host_3.udt_send('h2', 'message_3_from_h3')
 #    for i in range(5):
 #        priority = i%2

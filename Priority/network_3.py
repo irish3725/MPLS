@@ -8,8 +8,8 @@ class Interface:
     ## @param maxsize - the maximum size of the queue storing packets
     #  @param capacity - the capacity of the link in bps
     def __init__(self, maxsize=0, capacity=500):
-        self.in_queue = queue.Queue(maxsize);
-        self.out_queue = queue.Queue(maxsize);
+        self.in_queue = queue.PriorityQueue(maxsize);
+        self.out_queue = queue.PriorityQueue(maxsize);
         self.capacity = capacity #serialization rate
         self.next_avail_time = 0 #the next time the interface can transmit a packet
     
@@ -18,12 +18,12 @@ class Interface:
     def get(self, in_or_out):
         try:
             if in_or_out == 'in':
-                pkt_S = self.in_queue.get(False)
+                pkt_S = self.in_queue.get()[1]
                 # if pkt_S is not None:
                 #     print('getting packet from the IN queue')
                 return pkt_S
             else:
-                pkt_S = self.out_queue.get(False)
+                pkt_S = self.out_queue.get()[1]
                 # if pkt_S is not None:
                 #     print('getting packet from the OUT queue')
                 return pkt_S
@@ -36,12 +36,14 @@ class Interface:
     # @param block - if True, block until room in queue, if False may throw queue.Full exception
     # @param priority - used to put the packet either at the beginning or end of queue 
     def put(self, pkt, in_or_out, block=False, priority=0):
+        # reverse priority since priority queue removes lower values first 
+        priority = (int(priority) + 1) % 2 
         if in_or_out == 'out':
             # print('putting packet in the OUT queue')
-            self.out_queue.put(pkt, block)
+            self.out_queue.put((priority, pkt))
         else:
             # print('putting packet in the IN queue')
-            self.in_queue.put(pkt, block)
+            self.in_queue.put((priority, pkt))
          
 ## Implements a MPLS frame to encapsulate IP packets
 class MPLSFrame:
@@ -105,7 +107,7 @@ class NetworkPacket:
     def from_byte_S(self, byte_S):
         offset = NetworkPacket.dst_S_length 
         dst = byte_S[0 : offset].strip('0')
-        priority = byte_S[offset : offset + NetworkPacket.priority_length].strip('0')
+        priority = byte_S[offset : offset + NetworkPacket.priority_length]
         offset += NetworkPacket.priority_length 
         data_S = byte_S[offset : ]        
         return self(dst, data_S, priority)

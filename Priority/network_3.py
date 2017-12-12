@@ -49,7 +49,7 @@ class Interface:
                 while not self.out_queue.empty():
                     temp = self.out_queue.get()
                     q1.put(temp)
-                    print(temp)
+                    print(temp[1])
                 print() 
                 # repopulate origonal queue 
                 while not q1.empty():
@@ -158,7 +158,7 @@ class Host:
         fr = LinkFrame.from_byte_S(fr_S)
         assert(fr.type_S == 'Network') #should be receiving network packets by hosts
         pkt_S = fr.data_S
-#        print('%s: received packet "%s"' % (self, pkt_S))
+        print('%s: received packet "%s"' % (self, pkt_S))
        
     ## thread target for the host to keep receiving data
     def run(self):
@@ -244,7 +244,7 @@ class Router:
                 self.intf_L[out_intf_I].put(fr.to_byte_S(), 'out', True, label_prefix)
 #            print('%s: forwarding frame "%s" from interface %d to %d' % (self, fr, i, out_intf_I))
         except queue.Full:
-#            print('%s: frame "%s" lost on interface %d' % (self, p, i))
+            print('%s: frame "%s" lost on interface %d' % (self, p, i))
             pass
 
 
@@ -293,7 +293,7 @@ class Router:
             out_pkt_S = in_payload_S 
         # if nothing is defined, drop the packet
         else:
-#            print('%s: frame "%s" lost on interface %d' % (self, m_fr.to_byte_S(), i))
+            print('%s: frame "%s" lost on interface %d' % (self, m_fr.to_byte_S(), i))
             pass
  
 
@@ -307,7 +307,7 @@ class Router:
                 self.intf_L[out_intf_I].put(fr.to_byte_S(), 'out', True, label_prefix)
 #            print('%s: forwarding frame "%s" from interface %d to %d' % (self, fr, i, out_intf_I))
         except queue.Full:
-#            print('%s: frame "%s" lost on interface %d' % (self, m_fr.to_byte_S(), i))
+            print('%s: frame "%s" lost on interface %d' % (self, m_fr.to_byte_S(), i))
             pass
         
                 

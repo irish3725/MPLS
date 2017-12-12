@@ -30,9 +30,9 @@ if __name__ == '__main__':
                               max_queue_size=router_queue_size)
     object_L.append(router_a)
 
-    encap_tbl_D = {1: (4, 0)}    # table used to encapsulate network packets into MPLS frames {in interface: (out label, out interface)}    
+    encap_tbl_D = {1: ('4', 0)}    # table used to encapsulate network packets into MPLS frames {in interface: (out label, out interface)}    
     frwd_tbl_D = {}     
-    decap_tbl_D = {10: 1}    # table used to decapsulate network packets from MPLS frames {in label: out interface}
+    decap_tbl_D = {'11': 1}    # table used to decapsulate network packets from MPLS frames {in label: out interface}
     
     router_b = Router(name='RB', 
                               intf_capacity_L=[500,100],

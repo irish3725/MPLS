@@ -203,7 +203,6 @@ class Router:
     #  @param p Packet to forward
     #  @param i Incoming interface number for packet p
     def process_network_packet(self, pkt, i):
-      
         # create out label for packet and interface to send to   
         out_label_S = None 
         out_intf_I = None 
@@ -229,13 +228,50 @@ class Router:
     #  @param m_fr: MPLS frame to process
     #  @param i Incoming interface number for the frame
     def process_MPLS_frame(self, m_fr, i):
-        #TODO: implement MPLS forward, or MPLS decapsulation if this is the last hop router for the path
+        # out MPLS label for packet   
+        out_label_S = None 
+        # new interface for forwarding 
+        out_intf_I = None
+        # label for link layer 
+        out_link_label_S = None
+        # string version of packet to be encapsolated by link layer 
+        out_pkt_S = None 
+        # get label from MPLS frame
+        in_label_S = m_fr.label_S
+        # get payload from MPLS frame
+        in_payload_S = m_fr.data_S
+
         print('%s: processing MPLS frame "%s"' % (self, m_fr))
+
+        # check to see if there is a rule for forwarding this packet
+        if in_label_S in self.frwd_tbl_D.keys():
+            # get new MPLS label 
+            out_label_S = self.frwd_tbl_D[in_label_S][0]
+            # get new interface to forward packet 
+            out_intf_I = self.frwd_tbl_D[in_label_S][1]
+            # set link label as 'MPLS'
+            out_link_label_S = 'MPLS'
+            # create string payload for link layer to forward
+            out_pkt_S = MPLSFrame(out_label_S, in_payload_S).to_byte_S()
+        # else, check to see if there is a rule for decapsulation 
+        elif in_label_S in self.decap_tbl_D.keys():
+            # get new interface to forward packet 
+            out_intf_I = self.decap_tbl_D[in_label_S]
+            # set link labe as 'Network'
+            out_link_label_S = 'Network'
+            # create string payload for link layer to forward
+            out_pkt_S = in_payload_S 
+        # if nothing is defined, drop the packet
+        else:
+            print('%s: frame "%s" lost on interface %d' % (self, p, i))
+            pass
+ 
+
         # for now forward the frame out interface 1
         try:
-            fr = LinkFrame('MPLS', m_fr.to_byte_S())
-            self.intf_L[1].put(fr.to_byte_S(), 'out', True)
-            print('%s: forwarding frame "%s" from interface %d to %d' % (self, fr, i, 1))
+            fr = LinkFrame(out_link_label_S, out_pkt_S)
+            self.intf_L[out_intf_I].put(fr.to_byte_S(), 'out', True)
+            print('%s: forwarding frame "%s" from interface %d to %d' % (self, fr, i, out_intf_I))
         except queue.Full:
             print('%s: frame "%s" lost on interface %d' % (self, p, i))
             pass

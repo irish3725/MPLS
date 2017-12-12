@@ -1,5 +1,6 @@
 import queue
 import threading
+import copy
 from link_3 import LinkFrame
 
 
@@ -35,12 +36,24 @@ class Interface:
     # @param in_or_out - use 'in' or 'out' interface
     # @param block - if True, block until room in queue, if False may throw queue.Full exception
     # @param priority - used to put the packet either at the beginning or end of queue 
-    def put(self, pkt, in_or_out, block=False, priority=0):
+    # @param p - whether or not we should print this queue 
+    def put(self, pkt, in_or_out, block=False, priority=0, p=False):
         # reverse priority since priority queue removes lower values first 
         priority = (int(priority) + 1) % 2 
         if in_or_out == 'out':
             # print('putting packet in the OUT queue')
             self.out_queue.put((priority, pkt))
+            if p: 
+                q1 = queue.PriorityQueue()
+                # print contents of queue
+                while not self.out_queue.empty():
+                    temp = self.out_queue.get()
+                    q1.put(temp)
+                    print(temp)
+                print() 
+                # repopulate origonal queue 
+                while not q1.empty():
+                    self.out_queue.put(q1.get()) 
         else:
             # print('putting packet in the IN queue')
             self.in_queue.put((priority, pkt))
@@ -52,7 +65,7 @@ class MPLSFrame:
     
     ## @param label: label for forwarding
     #  @param data_S: data contained by MPLS frame 
-    def __init__(self, label_S, data_S):
+    def __init__(self, label_S, data_S): 
         self.label_S = label_S
         self.data_S = data_S    
 
@@ -75,8 +88,6 @@ class MPLSFrame:
         return self(label_S, data_S)
        
 ## Implements a network layer packet
-# NOTE: You will need to extend this class for the packet to include
-# the fields necessary for the completion of this assignment.
 class NetworkPacket:
     ## packet encoding lengths 
     dst_S_length = 5 
@@ -147,7 +158,7 @@ class Host:
         fr = LinkFrame.from_byte_S(fr_S)
         assert(fr.type_S == 'Network') #should be receiving network packets by hosts
         pkt_S = fr.data_S
-        print('%s: received packet "%s"' % (self, pkt_S))
+#        print('%s: received packet "%s"' % (self, pkt_S))
        
     ## thread target for the host to keep receiving data
     def run(self):
@@ -220,16 +231,20 @@ class Router:
             out_label_S = label_prefix + self.encap_tbl_D[i][0]
             out_intf_I = self.encap_tbl_D[i][1]   
         m_fr = MPLSFrame(out_label_S, pkt.to_byte_S())
-        print('%s: encapsulated packet "%s" as MPLS frame "%s"' % (self, pkt, m_fr))
+#        print('%s: encapsulated packet "%s" as MPLS frame "%s"' % (self, pkt, m_fr))
         #send the encapsulated packet for processing as MPLS frame
 #        self.process_MPLS_frame(m_fr, out_inf_I)
         # send newly encapsulated MPLS frame
         try:
             fr = LinkFrame('MPLS', m_fr.to_byte_S())
-            self.intf_L[out_intf_I].put(fr.to_byte_S(), 'out', True, label_prefix)
-            print('%s: forwarding frame "%s" from interface %d to %d' % (self, fr, i, out_intf_I))
+            if self.name == 'RD': 
+                print('\nOut queue for %s:' % self.name)
+                self.intf_L[out_intf_I].put(fr.to_byte_S(), 'out', True, label_prefix, True)
+            else:
+                self.intf_L[out_intf_I].put(fr.to_byte_S(), 'out', True, label_prefix)
+#            print('%s: forwarding frame "%s" from interface %d to %d' % (self, fr, i, out_intf_I))
         except queue.Full:
-            print('%s: frame "%s" lost on interface %d' % (self, p, i))
+#            print('%s: frame "%s" lost on interface %d' % (self, p, i))
             pass
 
 
@@ -254,7 +269,7 @@ class Router:
         # get priority
         label_prefix = m_fr.label_S[:1] 
 
-        print('%s: processing MPLS frame "%s"' % (self, m_fr))
+#        print('%s: processing MPLS frame "%s"' % (self, m_fr))
 
         # get the key that we will be looking for in frwd_tbl_D and deap_tbl_D
         tbl_key = (in_label_S[1:], i)
@@ -278,17 +293,21 @@ class Router:
             out_pkt_S = in_payload_S 
         # if nothing is defined, drop the packet
         else:
-            print('%s: frame "%s" lost on interface %d' % (self, m_fr.to_byte_S(), i))
+#            print('%s: frame "%s" lost on interface %d' % (self, m_fr.to_byte_S(), i))
             pass
  
 
         # for now forward the frame out interface 1
         try:
             fr = LinkFrame(out_link_label_S, out_pkt_S)
-            self.intf_L[out_intf_I].put(fr.to_byte_S(), 'out', True, label_prefix)
-            print('%s: forwarding frame "%s" from interface %d to %d' % (self, fr, i, out_intf_I))
+            if self.name == 'RD':
+                print('\nOut queue for %s:' % self.name)
+                self.intf_L[out_intf_I].put(fr.to_byte_S(), 'out', True, label_prefix, True)
+            else:
+                self.intf_L[out_intf_I].put(fr.to_byte_S(), 'out', True, label_prefix)
+#            print('%s: forwarding frame "%s" from interface %d to %d' % (self, fr, i, out_intf_I))
         except queue.Full:
-            print('%s: frame "%s" lost on interface %d' % (self, m_fr.to_byte_S(), i))
+#            print('%s: frame "%s" lost on interface %d' % (self, m_fr.to_byte_S(), i))
             pass
         
                 

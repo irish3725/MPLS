@@ -93,9 +93,15 @@ if __name__ == '__main__':
         t.start()
     
     #create some send events    
-    host_1.udt_send('h3', 'MESSAGE_1_FROM_H1')
-    host_2.udt_send('h3', 'message_2_from_h2', 1)
-    host_3.udt_send('h2', 'message_3_from_h3')
+    host_1.udt_send('h3', 'first_message_from_h1')
+    host_2.udt_send('h3', 'first_message_from_h2', 1)
+    host_3.udt_send('h2', 'first_message_from_h3')
+    host_1.udt_send('h3', 'second_message_from_h1')
+    host_2.udt_send('h3', 'second_message_from_h2', 1)
+    host_3.udt_send('h2', 'second_message_from_h3')
+    host_1.udt_send('h3', 'third_message_from_h1')
+    host_2.udt_send('h3', 'third_message_from_h2', 1)
+    host_3.udt_send('h2', 'third_message_from_h3')
 #    for i in range(5):
 #        priority = i%2
 #        host_1.udt_send('h2', 'message_%d_from_h1' % i, priority)

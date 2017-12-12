@@ -77,6 +77,7 @@ class MPLSFrame:
 class NetworkPacket:
     ## packet encoding lengths 
     dst_S_length = 5 
+    priority_length = 1
     
     ##@param dst: address of the destination host
     # @param data_S: packet payload
@@ -84,6 +85,7 @@ class NetworkPacket:
     def __init__(self, dst, data_S, priority=0):
         self.dst = dst
         self.data_S = data_S
+        self.priority = priority
         #TODO: add priority to the packet class
         
     ## called when printing the object
@@ -93,6 +95,7 @@ class NetworkPacket:
     ## convert packet to a byte string for transmission over links
     def to_byte_S(self):
         byte_S = str(self.dst).zfill(self.dst_S_length)
+        byte_S += str(self.priority).zfill(self.priority_length)
         byte_S += self.data_S
         return byte_S
     
@@ -100,8 +103,11 @@ class NetworkPacket:
     # @param byte_S: byte string representation of the packet
     @classmethod
     def from_byte_S(self, byte_S):
-        dst = byte_S[0 : NetworkPacket.dst_S_length].strip('0')
-        data_S = byte_S[NetworkPacket.dst_S_length : ]        
+        offset = NetworkPacket.dst_S_length 
+        dst = byte_S[0 : offset].strip('0')
+        dst = byte_S[offset : offset + NetworkPacket.priority_length].strip('0')
+        offset += NetworkPacket.priority_length 
+        data_S = byte_S[offset : ]        
         return self(dst, data_S)
     
 

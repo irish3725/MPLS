@@ -34,7 +34,8 @@ class Interface:
     # @param pkt - Packet to be inserted into the queue
     # @param in_or_out - use 'in' or 'out' interface
     # @param block - if True, block until room in queue, if False may throw queue.Full exception
-    def put(self, pkt, in_or_out, block=False):
+    # @param priority - used to put the packet either at the beginning or end of queue 
+    def put(self, pkt, in_or_out, block=False, priority=0):
         if in_or_out == 'out':
             # print('putting packet in the OUT queue')
             self.out_queue.put(pkt, block)
@@ -86,7 +87,6 @@ class NetworkPacket:
         self.dst = dst
         self.data_S = data_S
         self.priority = priority
-        #TODO: add priority to the packet class
         
     ## called when printing the object
     def __str__(self):
@@ -224,7 +224,7 @@ class Router:
         # send newly encapsulated MPLS frame
         try:
             fr = LinkFrame('MPLS', m_fr.to_byte_S())
-            self.intf_L[out_intf_I].put(fr.to_byte_S(), 'out', True)
+            self.intf_L[out_intf_I].put(fr.to_byte_S(), 'out', True, label_prefix)
             print('%s: forwarding frame "%s" from interface %d to %d' % (self, fr, i, out_intf_I))
         except queue.Full:
             print('%s: frame "%s" lost on interface %d' % (self, p, i))
@@ -244,13 +244,13 @@ class Router:
         # string version of packet to be encapsolated by link layer 
         out_pkt_S = None 
         # get Network Packet from payload
-        Network_pkt = NetworkPacket.from_byte_S(m_fr.data_S)  
+#        Network_pkt = NetworkPacket.from_byte_S(m_fr.data_S)  
         # get label from MPLS frame
         in_label_S = m_fr.label_S
         # get payload from MPLS frame
         in_payload_S = m_fr.data_S
         # get priority
-        label_prefix = Network_pkt.priority 
+        label_prefix = m_fr.label_S[:1] 
 
         print('%s: processing MPLS frame "%s"' % (self, m_fr))
 
@@ -283,7 +283,7 @@ class Router:
         # for now forward the frame out interface 1
         try:
             fr = LinkFrame(out_link_label_S, out_pkt_S)
-            self.intf_L[out_intf_I].put(fr.to_byte_S(), 'out', True)
+            self.intf_L[out_intf_I].put(fr.to_byte_S(), 'out', True, label_prefix)
             print('%s: forwarding frame "%s" from interface %d to %d' % (self, fr, i, out_intf_I))
         except queue.Full:
             print('%s: frame "%s" lost on interface %d' % (self, m_fr.to_byte_S(), i))

@@ -21,9 +21,9 @@ if __name__ == '__main__':
     object_L.append(host_3)
     
     # tables for router a 
-    encap_tbl_D = {0: ('11', 3), 1: ('12', 2)}    # table used to encapsulate network packets into MPLS frames {(in interface: (out label, out interface)}
+    encap_tbl_D = {0: ('1', 3), 1: ('2', 2)}    # table used to encapsulate network packets into MPLS frames {(in interface: (out label, out interface)}
     frwd_tbl_D = {}     # table used to forward MPLS frames {(in label, in interface): (out label, out interface)}
-    decap_tbl_D = {('21', 3): 1}    # table used to decapsulate network packets from MPLS frames {(in label, in interface): out interface}
+    decap_tbl_D = {('7', 3): 1}    # table used to decapsulate network packets from MPLS frames {(in label, in interface): out interface}
     router_a = Router(name='RA', 
                               intf_capacity_L=[500,500,500,500],
                               encap_tbl_D = encap_tbl_D,
@@ -34,11 +34,11 @@ if __name__ == '__main__':
 
     # tables for router b
     encap_tbl_D = {}    # table used to encapsulate network packets into MPLS frames {in interface: (out label, out interface)}
-    frwd_tbl_D = {('12', 0): ('15', 1)}     # table used to forward MPLS frames {(in label, in interface): (out label, out interface)}
+    frwd_tbl_D = {('2', 0): ('5', 1)}     # table used to forward MPLS frames {(in label, in interface): (out label, out interface)}
     decap_tbl_D = {}    # table used to decapsulate network packets from MPLS frames {(in label, in interface): out interface}
     
     router_b = Router(name='RB', 
-                              intf_capacity_L=[500,100],
+                              intf_capacity_L=[500,500],
                               encap_tbl_D = encap_tbl_D,
                               frwd_tbl_D = frwd_tbl_D,
                               decap_tbl_D = decap_tbl_D,
@@ -47,11 +47,11 @@ if __name__ == '__main__':
 
     # tables for router c
     encap_tbl_D = {}    # table used to encapsulate network packets into MPLS frames {in interface: (out label, out interface)}
-    frwd_tbl_D = {('11', 0): ('18', 1), ('19', 1): ('21', 0)}     # table used to forward MPLS frames {(in label, in interface): (out label, out interface)}
+    frwd_tbl_D = {('1', 0): ('8', 1), ('9', 1): ('7', 0)}     # table used to forward MPLS frames {(in label, in interface): (out label, out interface)}
     decap_tbl_D = {}    # table used to decapsulate network packets from MPLS frames {(in label, in interface): out interface}
     
     router_c = Router(name='RC', 
-                              intf_capacity_L=[500,100],
+                              intf_capacity_L=[100,100],
                               encap_tbl_D = encap_tbl_D,
                               frwd_tbl_D = frwd_tbl_D,
                               decap_tbl_D = decap_tbl_D,
@@ -59,12 +59,12 @@ if __name__ == '__main__':
     object_L.append(router_c)
    
     # tables for router d  
-    encap_tbl_D = {2: ('19', 1)}    # table used to encapsulate network packets into MPLS frames {in interface: (out label, out interface)}
+    encap_tbl_D = {2: ('9', 1)}    # table used to encapsulate network packets into MPLS frames {in interface: (out label, out interface)}
     frwd_tbl_D = {}     # table used to forward MPLS frames {(in label, in interface): (out label, out interface)}
-    decap_tbl_D = {('15', 0): 2, ('18', 1): 2}    # table used to decapsulate network packets from MPLS frames {(in label, in interface): out interface}
+    decap_tbl_D = {('5', 0): 2, ('8', 1): 2}    # table used to decapsulate network packets from MPLS frames {(in label, in interface): out interface}
     
     router_d = Router(name='RD', 
-                              intf_capacity_L=[500,100,500],
+                              intf_capacity_L=[500,500,500],
                               encap_tbl_D = encap_tbl_D,
                               frwd_tbl_D = frwd_tbl_D,
                               decap_tbl_D = decap_tbl_D,
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     # give time for message to be received 
     sleep(3)
     print('\nSending second message from H2. Path should be:\n\n    H2-RA-RB-RD-H3\n')
-    host_2.udt_send('h3', 'message_2_from_h2')
+    host_2.udt_send('h3', 'message_2_from_h2', 1)
     sleep(3)
     print('\nSending third message from H3. Path should be:\n\n    H3-RD-RC-RA-H2\n')
     host_3.udt_send('h2', 'message_3_from_h3')

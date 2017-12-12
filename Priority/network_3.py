@@ -67,7 +67,7 @@ class MPLSFrame:
     # @param byte_S: byte string representation of the packet
     @classmethod
     def from_byte_S(self, byte_S):
-        label_S = byte_S[0 : MPLSFrame.label_S_length].strip('0')
+        label_S = byte_S[0 : MPLSFrame.label_S_length]
         data_S = byte_S[MPLSFrame.label_S_length : ]        
         return self(label_S, data_S)
        
@@ -105,10 +105,10 @@ class NetworkPacket:
     def from_byte_S(self, byte_S):
         offset = NetworkPacket.dst_S_length 
         dst = byte_S[0 : offset].strip('0')
-        dst = byte_S[offset : offset + NetworkPacket.priority_length].strip('0')
+        priority = byte_S[offset : offset + NetworkPacket.priority_length].strip('0')
         offset += NetworkPacket.priority_length 
         data_S = byte_S[offset : ]        
-        return self(dst, data_S)
+        return self(dst, data_S, priority)
     
 
 ## Implements a network host for receiving and transmitting data
@@ -129,7 +129,7 @@ class Host:
     # @param data_S: data being transmitted to the network layer
     # @param priority: packet priority
     def udt_send(self, dst, data_S, priority=0):
-        pkt = NetworkPacket(dst, data_S)
+        pkt = NetworkPacket(dst, data_S, priority)
         print('%s: sending packet "%s" with priority %d' % (self, pkt, priority))
         #encapsulate network packet in a link frame (usually would be done by the OS)
         fr = LinkFrame('Network', pkt.to_byte_S())
@@ -212,9 +212,10 @@ class Router:
         # create out label for packet and interface to send to   
         out_label_S = None 
         out_intf_I = None 
+        label_prefix = pkt.priority
         # check to see if interface is in encap_tbl_D
         if i in self.encap_tbl_D.keys():
-            out_label_S = self.encap_tbl_D[i][0]
+            out_label_S = label_prefix + self.encap_tbl_D[i][0]
             out_intf_I = self.encap_tbl_D[i][1]   
         m_fr = MPLSFrame(out_label_S, pkt.to_byte_S())
         print('%s: encapsulated packet "%s" as MPLS frame "%s"' % (self, pkt, m_fr))
@@ -242,19 +243,23 @@ class Router:
         out_link_label_S = None
         # string version of packet to be encapsolated by link layer 
         out_pkt_S = None 
+        # get Network Packet from payload
+        Network_pkt = NetworkPacket.from_byte_S(m_fr.data_S)  
         # get label from MPLS frame
         in_label_S = m_fr.label_S
         # get payload from MPLS frame
         in_payload_S = m_fr.data_S
+        # get priority
+        label_prefix = Network_pkt.priority 
 
         print('%s: processing MPLS frame "%s"' % (self, m_fr))
 
         # get the key that we will be looking for in frwd_tbl_D and deap_tbl_D
-        tbl_key = (in_label_S, i)
+        tbl_key = (in_label_S[1:], i)
         # check to see if there is a rule for forwarding this packet
         if tbl_key in self.frwd_tbl_D.keys():
             # get new MPLS label 
-            out_label_S = self.frwd_tbl_D[tbl_key][0]
+            out_label_S = label_prefix + self.frwd_tbl_D[tbl_key][0]
             # get new interface to forward packet 
             out_intf_I = self.frwd_tbl_D[tbl_key][1]
             # set link label as 'MPLS'
@@ -271,7 +276,7 @@ class Router:
             out_pkt_S = in_payload_S 
         # if nothing is defined, drop the packet
         else:
-            print('%s: frame "%s" lost on interface %d' % (self, p, i))
+            print('%s: frame "%s" lost on interface %d' % (self, m_fr.to_byte_S(), i))
             pass
  
 
@@ -281,7 +286,7 @@ class Router:
             self.intf_L[out_intf_I].put(fr.to_byte_S(), 'out', True)
             print('%s: forwarding frame "%s" from interface %d to %d' % (self, fr, i, out_intf_I))
         except queue.Full:
-            print('%s: frame "%s" lost on interface %d' % (self, p, i))
+            print('%s: frame "%s" lost on interface %d' % (self, m_fr.to_byte_S(), i))
             pass
         
                 

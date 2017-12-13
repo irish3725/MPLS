@@ -231,18 +231,18 @@ class Router:
             out_label_S = label_prefix + self.encap_tbl_D[i][0]
             out_intf_I = self.encap_tbl_D[i][1]   
         m_fr = MPLSFrame(out_label_S, pkt.to_byte_S())
-#        print('%s: encapsulated packet "%s" as MPLS frame "%s"' % (self, pkt, m_fr))
+        print('%s: encapsulated packet "%s" as MPLS frame "%s"' % (self, pkt, m_fr))
         #send the encapsulated packet for processing as MPLS frame
 #        self.process_MPLS_frame(m_fr, out_inf_I)
         # send newly encapsulated MPLS frame
         try:
             fr = LinkFrame('MPLS', m_fr.to_byte_S())
-            if self.name == 'RD': 
+            if self.name == 'RA': 
                 print('\nOut queue for %s:' % self.name)
                 self.intf_L[out_intf_I].put(fr.to_byte_S(), 'out', True, label_prefix, True)
             else:
                 self.intf_L[out_intf_I].put(fr.to_byte_S(), 'out', True, label_prefix)
-#            print('%s: forwarding frame "%s" from interface %d to %d' % (self, fr, i, out_intf_I))
+            print('%s: forwarding frame "%s" from interface %d to %d' % (self, fr, i, out_intf_I))
         except queue.Full:
             print('%s: frame "%s" lost on interface %d' % (self, p, i))
             pass
@@ -300,12 +300,12 @@ class Router:
         # for now forward the frame out interface 1
         try:
             fr = LinkFrame(out_link_label_S, out_pkt_S)
-            if self.name == 'RD':
+            if self.name == 'RA':
                 print('\nOut queue for %s:' % self.name)
                 self.intf_L[out_intf_I].put(fr.to_byte_S(), 'out', True, label_prefix, True)
             else:
                 self.intf_L[out_intf_I].put(fr.to_byte_S(), 'out', True, label_prefix)
-#            print('%s: forwarding frame "%s" from interface %d to %d' % (self, fr, i, out_intf_I))
+            print('%s: forwarding frame "%s" from interface %d to %d' % (self, fr, i, out_intf_I))
         except queue.Full:
             print('%s: frame "%s" lost on interface %d' % (self, m_fr.to_byte_S(), i))
             pass

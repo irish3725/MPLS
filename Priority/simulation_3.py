@@ -7,7 +7,7 @@ from copy import deepcopy
 
 ##configuration parameters
 router_queue_size = 0 #0 means unlimited
-simulation_time = 10 #give the network sufficient time to execute transfers
+simulation_time = 15 #give the network sufficient time to execute transfers
 
 if __name__ == '__main__':
     object_L = [] #keeps track of objects, so we can kill their threads at the end
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     
     #create a Link Layer to keep track of links between network nodes
     link_layer = LinkLayer()
-    object_L.append(link_layer)
+#    object_L.append(link_layer)
     
     #add all the links - need to reflect the connectivity in cost_D tables above
     link_layer.add_link(Link(host_1, 0, router_a, 0))
@@ -83,6 +83,8 @@ if __name__ == '__main__':
     link_layer.add_link(Link(router_b, 1, router_d, 0))
     link_layer.add_link(Link(router_c, 1, router_d, 1))
     link_layer.add_link(Link(router_d, 2, host_3, 0))
+
+    object_L.append(link_layer)
     
     #start all the objects
     thread_L = []
@@ -94,14 +96,14 @@ if __name__ == '__main__':
     
     #create some send events    
     host_1.udt_send('h3', 'first_message_from_h1')
-    host_2.udt_send('h3', 'first_message_from_h2', 1)
-    host_3.udt_send('h2', 'first_message_from_h3')
+    host_2.udt_send('h3', 'first_message_from_h2')
+#    host_3.udt_send('h2', 'first_message_from_h3')
     host_1.udt_send('h3', 'second_message_from_h1')
-    host_2.udt_send('h3', 'second_message_from_h2', 1)
-    host_3.udt_send('h2', 'second_message_from_h3')
+#    host_2.udt_send('h3', 'second_message_from_h2', 1)
+#    host_3.udt_send('h2', 'second_message_from_h3')
     host_1.udt_send('h3', 'third_message_from_h1')
-    host_2.udt_send('h3', 'third_message_from_h2', 1)
-    host_3.udt_send('h2', 'third_message_from_h3')
+#    host_2.udt_send('h3', 'third_message_from_h2', 1)
+#    host_3.udt_send('h2', 'third_message_from_h3')
 #    for i in range(5):
 #        priority = i%2
 #        host_1.udt_send('h2', 'message_%d_from_h1' % i, priority)
